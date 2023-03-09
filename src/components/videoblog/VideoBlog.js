@@ -18,7 +18,7 @@ const VideoBlog = () => {
 
   const getVideos = async () => {
     try {
-      const response = await fetch("http://localhost:9091/api/videoblog/");
+      const response = await fetch("http://44.212.22.79:9091/api/videoblog/");
       if (response.status === 200) {
         const data = await response.json();
         setVideos(data);

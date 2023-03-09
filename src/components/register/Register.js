@@ -38,7 +38,7 @@ const Register = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:9090/api/auth/register",
+        "http://44.212.22.79:9090/api/auth/register",
         requestOptions
       );
       if (response.status === 201) {
