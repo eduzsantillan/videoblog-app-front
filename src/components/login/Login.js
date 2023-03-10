@@ -14,6 +14,8 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { useSignIn } from "react-auth-kit";
 import Copyright from "../copyright/Copyright";
+import { auth, provider } from "../../firebase";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 const theme = createTheme();
 
@@ -23,6 +25,9 @@ const Login = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const signIn = useSignIn();
+
+  const apiLogin =
+    process.env.REACT_APP_SECURITY_HOST + process.env.REACT_APP_LOGIN_PATH;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,10 +43,7 @@ const Login = () => {
     };
 
     try {
-      const response = await fetch(
-        "http://44.212.22.79:9090/api/auth/login",
-        requestOptions
-      );
+      const response = await fetch(apiLogin, requestOptions);
       if (response.status === 200) {
         const data = await response.text();
         //const data = await response.json(); //if the response is json, in this case the api is returning a string
@@ -66,6 +68,18 @@ const Login = () => {
       setEmail("");
       setPassword("");
     }
+  };
+
+  const handleSignInGoogle = async () => {
+    await signInWithPopup(auth, provider)
+      .then((result) => {
+        auth.currentUser.getIdToken(true).then(function (idToken) {
+          console.log("idToken: " + idToken);
+        });
+      })
+      .catch((error) => {
+        console.log("error: " + error);
+      });
   };
 
   return (
@@ -140,6 +154,14 @@ const Login = () => {
                 sx={{ mt: 3, mb: 2 }}
               >
                 Sign In
+              </Button>
+              <Button
+                onClick={handleSignInGoogle}
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                Sign In with google
               </Button>
               <Grid container>
                 {/* <Grid item xs>  TO IMPLEMENT LATER

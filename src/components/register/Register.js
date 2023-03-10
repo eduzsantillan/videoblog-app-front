@@ -23,6 +23,9 @@ const Register = () => {
     message: "",
   });
 
+  const apiSignup =
+    process.env.REACT_APP_SECURITY_HOST + process.env.REACT_APP_REGISTER_PATH;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const requestBody = {
@@ -37,10 +40,7 @@ const Register = () => {
     };
 
     try {
-      const response = await fetch(
-        "http://44.212.22.79:9090/api/auth/register",
-        requestOptions
-      );
+      const response = await fetch(apiSignup, requestOptions);
       if (response.status === 201) {
         const data = await response.text();
         setResult({ ...result, status: "OK", message: data });

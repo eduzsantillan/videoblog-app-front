@@ -11,6 +11,8 @@ const VideoBlog = () => {
   const [videos, setVideos] = useState();
   const isAuthenticated = useIsAuthenticated();
   const auth = useAuthUser();
+  const apiFetchVideoBlog =
+    process.env.REACT_APP_CORE_HOST + process.env.REACT_APP_FETCH_VB_PATH;
 
   useEffect(() => {
     getVideos();
@@ -18,7 +20,7 @@ const VideoBlog = () => {
 
   const getVideos = async () => {
     try {
-      const response = await fetch("http://44.212.22.79:9091/api/videoblog/");
+      const response = await fetch(apiFetchVideoBlog);
       if (response.status === 200) {
         const data = await response.json();
         setVideos(data);
@@ -32,7 +34,18 @@ const VideoBlog = () => {
   };
 
   function getVideoId(url) {
-    const videoId = url.split("v=")[1];
+    let videoId = "";
+    if (url.includes("youtube.com/shorts/")) {
+      videoId = url.split("shorts/")[1];
+      videoId = videoId.substring(0, videoId.indexOf("?"));
+      console.log(videoId);
+    } else {
+      videoId = url.split("v=")[1];
+    }
+
+    if (videoId == null || videoId == undefined) {
+      return null;
+    }
     const ampersandPosition = videoId.indexOf("&");
     if (ampersandPosition !== -1) {
       return videoId.substring(0, ampersandPosition);
