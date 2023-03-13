@@ -6,56 +6,54 @@ import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
 import Grid from "@mui/material/Grid";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import Typography from "@mui/material/Typography";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Copyright from "../copyright/Copyright";
+import { auth } from "../../firebase";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
 
 const theme = createTheme();
 
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullname, setFullname] = useState("");
   const [result, setResult] = useState({
     status: "",
     message: "",
   });
 
-  const apiSignup =
-    process.env.REACT_APP_SECURITY_HOST + process.env.REACT_APP_REGISTER_PATH;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const requestBody = {
-      fullname: fullname,
-      username: email,
-      password: password,
-    };
-    const requestOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    };
-
-    try {
-      const response = await fetch(apiSignup, requestOptions);
-      if (response.status === 201) {
-        const data = await response.text();
-        setResult({ ...result, status: "OK", message: data });
-      } else {
-        const errorData = await response.text();
-        setResult({ ...result, status: "ERR", message: errorData });
-      }
-    } catch (error) {
-      console.error(error);
-      setResult({ ...result, status: "ERR", message: error });
-    } finally {
-      setEmail("");
-      setFullname("");
-      setPassword("");
-    }
+    await createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        //send email verification
+        sendEmailVerification(auth.currentUser)
+          .then(() => {
+            setResult({ ...result, status: "OK", message: "Success!" });
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      })
+      .catch((error) => {
+        if (error.code === "auth/email-already-in-use") {
+          setResult({
+            ...result,
+            status: "ERR",
+            message: "Email already in use, please try another",
+          });
+        } else {
+          setResult({ ...result, status: "ERR", message: error.message });
+        }
+      });
+    setEmail("");
+    setPassword("");
   };
 
   return (
@@ -88,18 +86,7 @@ const Register = () => {
                 margin="normal"
                 required
                 fullWidth
-                id="fullname"
-                label="Full Name"
-                name="fullname"
-                autoComplete="fullname"
                 autoFocus
-                value={fullname}
-                onChange={(e) => setFullname(e.target.value)}
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
                 id="email"
                 label="Email Address"
                 name="email"
@@ -122,11 +109,12 @@ const Register = () => {
               {result.status === "OK" && (
                 <Alert severity="success">
                   {" "}
-                  <strong>Success!</strong> You should{" "}
+                  <strong>Success!</strong> Please check your email in order to
+                  activate your account. Then you should{" "}
                   <a href="/login" className="alert-link">
                     Login
                   </a>{" "}
-                  now.{" "}
+                  to continue.
                 </Alert>
               )}
               {result.status === "ERR" && (
@@ -140,10 +128,18 @@ const Register = () => {
               >
                 Sign Up
               </Button>
+              <Grid container>
+                <Grid item>
+                  <Link href="/login" variant="body2">
+                    {"Already have an acccount? Login"}
+                  </Link>
+                </Grid>
+              </Grid>
               <Copyright sx={{ mt: 5 }} />
             </Box>
           </Box>
         </Grid>
+
         <Grid
           item
           xs={false}

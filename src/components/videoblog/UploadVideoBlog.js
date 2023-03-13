@@ -3,8 +3,26 @@ import Header from "../header/Header";
 import { useAuthUser } from "react-auth-kit";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import Button from "react-bootstrap/Button";
+import Button from "@mui/material/Button";
 import Form from "react-bootstrap/Form";
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
+import Paper from "@mui/material/Paper";
+import TextField from "@mui/material/TextField";
+import Alert from "@mui/material/Alert";
+import { CssBaseline } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#78909c",
+    },
+    secondary: {
+      main: "#f44336",
+    },
+  },
+});
 
 const UploadVideoBlog = () => {
   const [title, setTitle] = useState("");
@@ -21,6 +39,10 @@ const UploadVideoBlog = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log("Entro");
+
+    console.log(auth().token);
 
     const requestBody = {
       title: title,
@@ -58,44 +80,104 @@ const UploadVideoBlog = () => {
   return (
     <div>
       <Header />
-      <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3" controlId="formTitle">
-          <Form.Label>Title</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </Form.Group>
+      <ThemeProvider theme={theme}>
+        <Grid container component="main" sx={{ height: "100vh" }}>
+          <CssBaseline />
+          <Grid
+            item
+            xs={12}
+            sm={8}
+            md={5}
+            component={Paper}
+            elevation={6}
+            square
+          >
+            <Box
+              sx={{
+                my: 8,
+                mx: 4,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <Box
+                component="form"
+                noValidate
+                onSubmit={handleSubmit}
+                sx={{ mt: 1 }}
+              >
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="title"
+                  label="Title"
+                  name="title"
+                  autoComplete="title"
+                  autoFocus
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="Description"
+                  label="Description"
+                  type="text"
+                  id="description"
+                  autoComplete="Enter description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="URL Video"
+                  label="Url Video"
+                  type="text"
+                  id="description"
+                  autoComplete="Enter youtube url"
+                  value={urlVideo}
+                  onChange={(e) => setUrlVideo(e.target.value)}
+                />
 
-        <Form.Group className="mb-3" controlId="formBasicDescription">
-          <Form.Label>Description</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </Form.Group>
+                {result.status !== "201" && (
+                  <Alert severity="error">{result.message}</Alert>
+                )}
 
-        <Form.Group className="mb-3" controlId="formBasicUrlVideo">
-          <Form.Label>URL Video</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter youtube url"
-            value={urlVideo}
-            onChange={(e) => setUrlVideo(e.target.value)}
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                >
+                  Post Video
+                </Button>
+              </Box>
+            </Box>
+          </Grid>
+          <Grid
+            item
+            xs={false}
+            sm={4}
+            md={7}
+            sx={{
+              backgroundImage:
+                "url(https://images.pexels.com/photos/3945314/pexels-photo-3945314.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2)",
+              backgroundRepeat: "no-repeat",
+              backgroundColor: (t) =>
+                t.palette.mode === "light"
+                  ? t.palette.grey[50]
+                  : t.palette.grey[900],
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
           />
-        </Form.Group>
-
-        {result.status !== "201" && (
-          <div className="alert alert-danger">{result.message}</div>
-        )}
-        <Button variant="primary" type="submit">
-          Post Video
-        </Button>
-      </Form>
+        </Grid>
+      </ThemeProvider>
     </div>
   );
 };

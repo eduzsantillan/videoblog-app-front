@@ -17,6 +17,7 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
 import { useNavigate } from "react-router-dom";
+import { getAuth } from "firebase/auth";
 
 const theme = createTheme({
   palette: {
@@ -50,6 +51,17 @@ const Header = () => {
     navigate("/upload");
   };
   const handleLogout = () => {
+    if (auth().fromProvider) {
+      const authfb = getAuth();
+      authfb
+        .signOut()
+        .then(() => {
+          // Sign-out successful.
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
     signOut();
     navigate("/login");
   };
@@ -131,7 +143,14 @@ const Header = () => {
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Open settings">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar alt="" src="/static/images/avatar/2.jpg" />
+                  <Avatar
+                    alt=""
+                    src={
+                      auth()?.fromProvider
+                        ? auth()?.providerData?.photoURL
+                        : auth()?.email
+                    }
+                  />
                 </IconButton>
               </Tooltip>
               <Menu

@@ -15,9 +15,18 @@ import { useNavigate } from "react-router-dom";
 import { useSignIn } from "react-auth-kit";
 import Copyright from "../copyright/Copyright";
 import { auth, provider } from "../../firebase";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 
-const theme = createTheme();
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#78909c",
+    },
+    secondary: {
+      main: "#f44336",
+    },
+  },
+});
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -26,55 +35,62 @@ const Login = () => {
   const navigate = useNavigate();
   const signIn = useSignIn();
 
-  const apiLogin =
-    process.env.REACT_APP_SECURITY_HOST + process.env.REACT_APP_LOGIN_PATH;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const requestBody = {
-      username: email,
-      password: password,
-    };
-    console.log(requestBody);
-    const requestOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    };
-
-    try {
-      const response = await fetch(apiLogin, requestOptions);
-      if (response.status === 200) {
-        const data = await response.text();
-        //const data = await response.json(); //if the response is json, in this case the api is returning a string
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        if (!auth.currentUser.emailVerified) {
+          setError("Please verify your email address, before you login");
+          return;
+        }
+        // Signed in
+        let token;
+        auth.currentUser.getIdToken(true).then(function (idToken) {
+          console.log("idToken: " + idToken);
+          token = idToken;
+        });
         signIn({
-          token: data,
+          token: token,
           expiresIn: 60,
           tokenType: "Bearer",
           authState: {
             email: email,
-            token: data,
+            token: token,
           },
         });
         navigate("/"); // navigate to dashboard
-      } else {
-        const errorData = await response.text();
-        setError(`Error: ${errorData}`);
-      }
-    } catch (error) {
-      console.error(error);
-      setError("Something went wrong");
-    } finally {
-      setEmail("");
-      setPassword("");
-    }
+        // ...
+      })
+      .catch((error) => {
+        if (error.code === "auth/wrong-password") {
+          setError("Wrong password");
+        } else if (error.code === "auth/user-not-found") {
+          setError("User not found");
+        } else {
+          setError("Something went wrong");
+        }
+      });
   };
 
   const handleSignInGoogle = async () => {
     await signInWithPopup(auth, provider)
       .then((result) => {
+        let token;
         auth.currentUser.getIdToken(true).then(function (idToken) {
-          console.log("idToken: " + idToken);
+          token = idToken;
+          console.log("idToken: " + token);
+          signIn({
+            token: token,
+            expiresIn: 60,
+            tokenType: "Bearer",
+            authState: {
+              email: auth.currentUser.email,
+              fromProvider: true,
+              providerData: auth.currentUser,
+              token: token,
+            },
+          });
+          navigate("/");
         });
       })
       .catch((error) => {
@@ -157,19 +173,32 @@ const Login = () => {
               </Button>
               <Button
                 onClick={handleSignInGoogle}
-                fullWidth
                 variant="contained"
-                sx={{ mt: 3, mb: 2 }}
+                color="primary"
+                startIcon={
+                  <img
+                    src="https://imgur.com/O9V5ups.png"
+                    alt="Google"
+                    height={25}
+                  />
+                }
               >
-                Sign In with google
+                Sign in with Google
               </Button>
-              <Grid container>
-                {/* <Grid item xs>  TO IMPLEMENT LATER
-                  <Link href="#" variant="body2">
+
+              <Grid
+                container
+                spacing={3}
+                style={{ marginTop: "10px" }}
+                justifyContent="flex-end"
+                alignItems="center"
+              >
+                <Grid item xs={4}>
+                  <Link href="/forgotpass" variant="body2">
                     Forgot password?
                   </Link>
-                </Grid> */}
-                <Grid item>
+                </Grid>
+                <Grid item xs={8}>
                   <Link href="/signup" variant="body2">
                     {"Don't have an account? Sign Up"}
                   </Link>

@@ -1,14 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { Row, Col } from "react-bootstrap";
-import Card from "react-bootstrap/Card";
-import ImageList from "@mui/material/ImageList";
-import ImageListItem from "@mui/material/ImageListItem";
-import ImageListItemBar from "@mui/material/ImageListItemBar";
+import Grid from "@mui/material/Grid";
+import Card from "@mui/material/Card";
+import CardActions from "@mui/material/CardActions";
+import CardContent from "@mui/material/CardContent";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
 import { useIsAuthenticated } from "react-auth-kit";
 import { useAuthUser } from "react-auth-kit";
+import Box from "@mui/material/Box";
+import Modal from "@mui/material/Modal";
 
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 400,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  pt: 2,
+  px: 4,
+  pb: 3,
+};
 const VideoBlog = () => {
   const [videos, setVideos] = useState();
+  const [open, setOpen] = useState(false);
+  const [response, setResponse] = useState("");
   const isAuthenticated = useIsAuthenticated();
   const auth = useAuthUser();
   const apiFetchVideoBlog =
@@ -17,6 +35,16 @@ const VideoBlog = () => {
   useEffect(() => {
     getVideos();
   }, []);
+
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+
+    getVideos();
+  };
 
   const getVideos = async () => {
     try {
@@ -43,7 +71,7 @@ const VideoBlog = () => {
       videoId = url.split("v=")[1];
     }
 
-    if (videoId == null || videoId == undefined) {
+    if (videoId === null || videoId === undefined) {
       return null;
     }
     const ampersandPosition = videoId.indexOf("&");
@@ -61,44 +89,101 @@ const VideoBlog = () => {
     return isAuthenticated() && video.username === auth().email;
   }
 
+  async function handleDelete(idVideo) {
+    console.log(idVideo.toString());
+
+    const apiDeleteVideoBlog =
+      process.env.REACT_APP_CORE_HOST +
+      process.env.REACT_APP_FETCH_VB_PATH +
+      "/" +
+      idVideo;
+    const requestOptions = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: auth().token,
+      },
+    };
+
+    try {
+      const response = await fetch(apiDeleteVideoBlog, requestOptions);
+      if (response.status === 200) {
+        setResponse("Video deleted");
+      } else {
+        setResponse(response.data);
+      }
+      handleOpen();
+    } catch (error) {
+      setResponse(error);
+    }
+  }
+
   return (
-    <div>
-      <Row>
-        <Col>
-          <h1>Last updated Videos </h1>
-        </Col>
-      </Row>
-      <br></br>
-      <Row xs={1} md={4} className="g-4">
+    <Box sx={{ marginLeft: 10, marginRight: 10, marginBottom: 5 }}>
+      <Grid
+        container
+        direction="row"
+        justifyContent="center"
+        alignItems="center"
+        spacing={3}
+      >
         {videos?.map((video) => {
           return (
-            <Col key={video.description}>
-              <Card>
-                <Card.Img
-                  variant="top"
+            <Grid item key={video.title}>
+              <Card sx={{ maxWidth: 345, marginTop: 10 }}>
+                <img
                   src={getThumbnailFromVideoId(getVideoId(video.urlVideo))}
+                  style={{ width: "100%", height: "auto" }}
                 />
-                <Card.Body>
-                  <Card.Title>{video.title}</Card.Title>
-                  <Card.Subtitle className="mb-2 text-muted">
-                    By {video.username}
-                  </Card.Subtitle>
-                  <Card.Text>{video.description}</Card.Text>
-                  {canDeleteVideo(video) && (
-                    <Card.Link href="#">Delete</Card.Link>
-                  )}
-                  <Card.Link href={`/play/${getVideoId(video.urlVideo)}`}>
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    {video.title}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      height: 60,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {video.description}
+                  </Typography>
+                </CardContent>
+
+                <CardActions>
+                  <Button
+                    href={`/play/${getVideoId(video.urlVideo)}`}
+                    size="small"
+                  >
                     Play
-                  </Card.Link>
-                  <Card.Link href="#">Comment</Card.Link>
-                </Card.Body>
+                  </Button>
+                  <Button size="small">Comment</Button>
+                  {canDeleteVideo(video) && (
+                    <Button onClick={() => handleDelete(video.id)} size="small">
+                      Delete
+                    </Button>
+                  )}
+                  <Modal
+                    open={open}
+                    onClose={handleClose}
+                    aria-labelledby="parent-modal-title"
+                    aria-describedby="parent-modal-description"
+                  >
+                    <Box sx={{ ...style, width: 400 }}>
+                      <h2 id="parent-modal-title">Alert</h2>
+                      <p id="parent-modal-description">{response}</p>
+                      <Button onClick={handleClose}>Close</Button>
+                    </Box>
+                  </Modal>
+                </CardActions>
               </Card>
-            </Col>
+            </Grid>
           );
         })}
-      </Row>
-    </div>
+      </Grid>
+    </Box>
   );
 };
-
 export default VideoBlog;
