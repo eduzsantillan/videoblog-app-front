@@ -149,7 +149,18 @@ const VideoBlog = () => {
                     }}
                   >
                     {video.description}
+                    <br></br>
                   </Typography>
+                  <Box sx={{ width: "100%", maxWidth: 500, mt: 2 }}>
+                    <Typography
+                      variant="caption"
+                      display="block"
+                      gutterBottom
+                      style={{ textAlign: "left" }}
+                    >
+                      Uploaded by {video.username}
+                    </Typography>
+                  </Box>
                 </CardContent>
 
                 <CardActions>

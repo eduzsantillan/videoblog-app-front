@@ -47,17 +47,17 @@ const Login = () => {
         let token;
         auth.currentUser.getIdToken(true).then(function (idToken) {
           console.log("idToken: " + idToken);
-          token = idToken;
+          signIn({
+            token: idToken,
+            expiresIn: 60,
+            tokenType: "Bearer",
+            authState: {
+              email: email,
+              token: idToken,
+            },
+          });
         });
-        signIn({
-          token: token,
-          expiresIn: 60,
-          tokenType: "Bearer",
-          authState: {
-            email: email,
-            token: token,
-          },
-        });
+
         navigate("/"); // navigate to dashboard
         // ...
       })
