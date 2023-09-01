@@ -9,6 +9,14 @@ import { useIsAuthenticated } from "react-auth-kit";
 import { useAuthUser } from "react-auth-kit";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
+import {
+  collection,
+  getDocs,
+  doc,
+  deleteDoc,
+  getDoc,
+} from "firebase/firestore";
+import { db } from "../../firebase";
 
 const style = {
   position: "absolute",
@@ -29,12 +37,27 @@ const VideoBlog = () => {
   const [response, setResponse] = useState("");
   const isAuthenticated = useIsAuthenticated();
   const auth = useAuthUser();
-  const apiFetchVideoBlog =
-    process.env.REACT_APP_CORE_HOST + process.env.REACT_APP_FETCH_VB_PATH;
 
   useEffect(() => {
     getVideos();
   }, []);
+
+  const getVideos = async () => {
+    try {
+      const dataCollection = collection(db, "video-blog");
+      const dataSnapshot = await getDocs(dataCollection);
+      const dataList = [];
+      dataSnapshot.forEach((doc) => {
+        const docData = doc.data();
+        docData.id = doc.id;
+        dataList.push(docData);
+      });
+      console.log(dataList);
+      setVideos(dataList);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleOpen = () => {
     setOpen(true);
@@ -42,23 +65,7 @@ const VideoBlog = () => {
 
   const handleClose = () => {
     setOpen(false);
-
     getVideos();
-  };
-
-  const getVideos = async () => {
-    try {
-      const response = await fetch(apiFetchVideoBlog);
-      if (response.status === 200) {
-        const data = await response.json();
-        setVideos(data);
-        console.log(data);
-      } else {
-        console.log("Error");
-      }
-    } catch (error) {
-      console.error(error);
-    }
   };
 
   function getVideoId(url) {
@@ -90,31 +97,16 @@ const VideoBlog = () => {
   }
 
   async function handleDelete(idVideo) {
-    console.log(idVideo.toString());
-
-    const apiDeleteVideoBlog =
-      process.env.REACT_APP_CORE_HOST +
-      process.env.REACT_APP_FETCH_VB_PATH +
-      "/" +
-      idVideo;
-    const requestOptions = {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: auth().token,
-      },
-    };
-
+    console.log(idVideo);
     try {
-      const response = await fetch(apiDeleteVideoBlog, requestOptions);
-      if (response.status === 200) {
-        setResponse("Video deleted");
-      } else {
-        setResponse(response.data);
-      }
+      const docRef = doc(db, "video-blog", idVideo);
+      const docSnap = await getDoc(docRef);
+      console.log(docSnap.data());
+      await deleteDoc(docRef);
+      setResponse("Video deleted successfully");
       handleOpen();
     } catch (error) {
-      setResponse(error);
+      console.log(error);
     }
   }
 
@@ -134,6 +126,12 @@ const VideoBlog = () => {
                 <img
                   src={getThumbnailFromVideoId(getVideoId(video.urlVideo))}
                   style={{ width: "100%", height: "auto" }}
+                  onClick={() => {
+                    console.log("clic video");
+                    window.location.href = `/play/${getVideoId(
+                      video.urlVideo
+                    )}`;
+                  }}
                 />
                 <CardContent>
                   <Typography gutterBottom variant="h5" component="div">
@@ -170,7 +168,6 @@ const VideoBlog = () => {
                   >
                     Play
                   </Button>
-                  <Button size="small">Comment</Button>
                   {canDeleteVideo(video) && (
                     <Button onClick={() => handleDelete(video.id)} size="small">
                       Delete

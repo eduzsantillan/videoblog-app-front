@@ -3,7 +3,7 @@ import ReactPlayer from "react-player";
 import { useParams } from "react-router-dom";
 import Header from "../header/Header";
 
-const VideoBlog = ({ video }) => {
+const VideoBlog = () => {
   let params = useParams();
   let key = params.videoLink;
 

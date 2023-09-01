@@ -38,13 +38,11 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+      .then(() => {
         if (!auth.currentUser.emailVerified) {
           setError("Please verify your email address, before you login");
           return;
         }
-        // Signed in
-        let token;
         auth.currentUser.getIdToken(true).then(function (idToken) {
           console.log("idToken: " + idToken);
           signIn({
@@ -57,7 +55,6 @@ const Login = () => {
             },
           });
         });
-
         navigate("/"); // navigate to dashboard
         // ...
       })
@@ -74,7 +71,7 @@ const Login = () => {
 
   const handleSignInGoogle = async () => {
     await signInWithPopup(auth, provider)
-      .then((result) => {
+      .then(() => {
         let token;
         auth.currentUser.getIdToken(true).then(function (idToken) {
           token = idToken;
@@ -108,7 +105,8 @@ const Login = () => {
           sm={4}
           md={7}
           sx={{
-            backgroundImage: "url(https://source.unsplash.com/random)",
+            backgroundImage:
+              "url(https://source.unsplash.com/random/?Landscape&)",
             backgroundRepeat: "no-repeat",
             backgroundColor: (t) =>
               t.palette.mode === "light"

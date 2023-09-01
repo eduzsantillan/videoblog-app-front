@@ -4,7 +4,6 @@ import { useAuthUser } from "react-auth-kit";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Button from "@mui/material/Button";
-import Form from "react-bootstrap/Form";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
@@ -12,6 +11,8 @@ import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import { CssBaseline } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 const theme = createTheme({
   palette: {
@@ -34,42 +35,23 @@ const UploadVideoBlog = () => {
   });
   const auth = useAuthUser();
   const navigate = useNavigate();
-  const apiUploadVideoBlog =
-    process.env.REACT_APP_CORE_HOST + process.env.REACT_APP_CREATE_VB_PATH;
 
   const handleSubmit = async (e) => {
+    console.log("Upload");
     e.preventDefault();
-
-    console.log("Entro");
-
-    console.log(auth().token);
-
-    const requestBody = {
-      title: title,
-      description: description,
-      urlVideo: urlVideo,
-      username: auth().email,
-    };
-    const requestOptions = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: auth().token,
-      },
-      body: JSON.stringify(requestBody),
-    };
-
     try {
-      const response = await fetch(apiUploadVideoBlog, requestOptions);
-      if (response.status === 201) {
-        navigate("/"); // navigate to dashboard
-      } else {
-        const errorData = await response.text();
-        setResult({ ...result, status: response.status, message: errorData });
-      }
+      const collectionRef = collection(db, "video-blog");
+      const payload = {
+        title: title,
+        description: description,
+        urlVideo: urlVideo,
+        username: auth().email,
+      };
+      await addDoc(collectionRef, payload);
+      navigate("/");
     } catch (error) {
-      console.error(error);
       setResult({ ...result, status: "500", message: error });
+      console.log(error);
     } finally {
       setTitle("");
       setDescription("");
